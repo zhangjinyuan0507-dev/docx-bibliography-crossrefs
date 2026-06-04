@@ -10,7 +10,7 @@ References
 [2] Author B. Title...
 ```
 
-The script converts the bibliography into Word/WPS automatic numbering (`[1]`, `[2]`, ...) and replaces body citations such as `[1]`, `[1, 7, 15]`, or `[62-65]` with `REF` fields that use:
+The script converts the bibliography into Word/WPS automatic numbering (`[1]`, `[2]`, ...) and replaces body citations such as `[1]`, `[1, 7, 15]`, or `[62-65]` with superscript bracketed `REF` fields that use:
 
 ```text
 REF Ref_Bib_001 \w \h
@@ -24,6 +24,8 @@ That means:
 ## What It Fixes
 
 Plain text bibliography citations cannot update or jump to the reference list. This skill makes them behave like real cross-references while preserving the familiar bracketed citation style.
+
+By default, body citation markers are superscripted while keeping brackets, for example superscript `[1]` rather than plain `[1]` or bare `1`.
 
 ## Usage
 
@@ -51,6 +53,12 @@ If the bibliography heading is not `References`, pass it explicitly:
 python scripts\bibliography_crossrefs.py "C:\path\paper.docx" --heading "参考文献" --backup --audit
 ```
 
+To keep body citations at the normal baseline instead of superscript, pass:
+
+```powershell
+python scripts\bibliography_crossrefs.py "C:\path\paper.docx" --no-superscript-body-citations --backup --audit
+```
+
 ## Expected Input
 
 - DOCX file.
@@ -76,10 +84,11 @@ numbering_relationship=True
 numbering_content_type=True
 ref_fields=<nonzero>
 ref_fields_with_w_h=<same as ref_fields>
+superscript_digit_runs=<nonzero>
 hyperlink_wrappers=0
 ```
 
-Then open the output in Word or WPS and test Ctrl+click on a body citation. It should jump to the matching bibliography entry.
+Then open the output in Word or WPS and check that body citations appear as superscript bracketed citations. Ctrl+click on a body citation should jump to the matching bibliography entry.
 
 ## Codex Skill
 

@@ -169,10 +169,23 @@ def add_bookmark(p: ET.Element, name: str, bookmark_id: int) -> None:
     p.append(end)
 
 
-def make_run_with_text(text: str, template_rpr: ET.Element | None = None) -> ET.Element:
+def clone_rpr(template_rpr: ET.Element | None = None, superscript: bool = False) -> ET.Element | None:
+    rpr = copy.deepcopy(template_rpr) if template_rpr is not None else None
+    if superscript:
+        if rpr is None:
+            rpr = ET.Element(qn("w:rPr"))
+        vert_align = rpr.find("w:vertAlign", NS)
+        if vert_align is None:
+            vert_align = ET.SubElement(rpr, qn("w:vertAlign"))
+        vert_align.set(qn("w:val"), "superscript")
+    return rpr
+
+
+def make_run_with_text(text: str, template_rpr: ET.Element | None = None, superscript: bool = False) -> ET.Element:
     r = ET.Element(qn("w:r"))
-    if template_rpr is not None:
-        r.append(copy.deepcopy(template_rpr))
+    rpr = clone_rpr(template_rpr, superscript=superscript)
+    if rpr is not None:
+        r.append(rpr)
     t = ET.SubElement(r, qn("w:t"))
     if text.startswith(" ") or text.endswith(" "):
         t.set(f"{{{XML_NS}}}space", "preserve")
@@ -180,28 +193,41 @@ def make_run_with_text(text: str, template_rpr: ET.Element | None = None) -> ET.
     return r
 
 
-def make_ref_field(bookmark: str, display: str, template_rpr: ET.Element | None = None) -> list[ET.Element]:
+def make_ref_field(
+    bookmark: str,
+    display: str,
+    template_rpr: ET.Element | None = None,
+    superscript: bool = False,
+) -> list[ET.Element]:
     def fld_char(kind: str) -> ET.Element:
         r = ET.Element(qn("w:r"))
-        if template_rpr is not None:
-            r.append(copy.deepcopy(template_rpr))
+        rpr = clone_rpr(template_rpr, superscript=superscript)
+        if rpr is not None:
+            r.append(rpr)
         ET.SubElement(r, qn("w:fldChar"), {qn("w:fldCharType"): kind})
         return r
 
     instr = ET.Element(qn("w:r"))
-    if template_rpr is not None:
-        instr.append(copy.deepcopy(template_rpr))
+    instr_rpr = clone_rpr(template_rpr, superscript=superscript)
+    if instr_rpr is not None:
+        instr.append(instr_rpr)
     instr_t = ET.SubElement(instr, qn("w:instrText"))
     instr_t.set(f"{{{XML_NS}}}space", "preserve")
     instr_t.text = f" REF {bookmark} \\w \\h "
 
-    return [fld_char("begin"), instr, fld_char("separate"), make_run_with_text(display, template_rpr), fld_char("end")]
+    return [
+        fld_char("begin"),
+        instr,
+        fld_char("separate"),
+        make_run_with_text(display, template_rpr, superscript=superscript),
+        fld_char("end"),
+    ]
 
 
 BODY_REF_RE = re.compile(r"\[(\d+(?:\s*[-,;]\s*\d+)*)\]")
 
 
-def replace_body_refs_in_paragraph(p: ET.Element, bookmarks: dict[int, str]) -> int:
+def replace_body_refs_in_paragraph(p: ET.Element, bookmarks: dict[int, str], superscript: bool) -> int:
     replaced = 0
     new_children: list[ET.Element] = []
     for child in list(p):
@@ -229,14 +255,16 @@ def replace_body_refs_in_paragraph(p: ET.Element, bookmarks: dict[int, str]) -> 
                 continue
             if m.start() > pos:
                 new_children.append(make_run_with_text(text[pos : m.start()], rpr))
+            new_children.append(make_run_with_text("[", rpr, superscript=superscript))
             for part in re.split(r"(\d+)", m.group(1)):
                 if not part:
                     continue
                 if part.isdigit() and int(part) in bookmarks:
-                    new_children.extend(make_ref_field(bookmarks[int(part)], f"[{part}]", rpr))
+                    new_children.extend(make_ref_field(bookmarks[int(part)], part, rpr, superscript=superscript))
                     replaced += 1
                 else:
-                    new_children.append(make_run_with_text(part, rpr))
+                    new_children.append(make_run_with_text(part, rpr, superscript=superscript))
+            new_children.append(make_run_with_text("]", rpr, superscript=superscript))
             pos = m.end()
             changed = True
         if changed and pos < len(text):
@@ -257,7 +285,12 @@ def find_references_heading(paragraphs: list[ET.Element], heading: str) -> int:
     raise ValueError(f"References heading not found: {heading!r}")
 
 
-def patch_docx(src: Path, out: Path, heading: str = "References") -> dict[str, int]:
+def patch_docx(
+    src: Path,
+    out: Path,
+    heading: str = "References",
+    superscript_body_citations: bool = True,
+) -> dict[str, int]:
     with zipfile.ZipFile(src, "r") as zin:
         files = {name: zin.read(name) for name in zin.namelist()}
 
@@ -306,7 +339,7 @@ def patch_docx(src: Path, out: Path, heading: str = "References") -> dict[str, i
 
     replaced = 0
     for p in paragraphs[:ref_heading_idx]:
-        replaced += replace_body_refs_in_paragraph(p, bookmarks)
+        replaced += replace_body_refs_in_paragraph(p, bookmarks, superscript=superscript_body_citations)
 
     settings_path = "word/settings.xml"
     settings_root = ET.fromstring(files[settings_path]) if settings_path in files else ET.Element(qn("w:settings"))
@@ -339,6 +372,17 @@ def audit_docx(path: Path) -> dict[str, int | bool]:
         content_types = zin.read("[Content_Types].xml").decode("utf-8")
 
     instr = [t.text or "" for t in doc.findall(".//w:instrText", NS)]
+    ref_result_runs = [
+        run
+        for run in doc.findall(".//w:r", NS)
+        if run.find("w:t", NS) is not None and (run.find("w:t", NS).text or "").isdigit()
+    ]
+    superscript_digit_runs = [
+        run
+        for run in ref_result_runs
+        if run.find("w:rPr/w:vertAlign", NS) is not None
+        and run.find("w:rPr/w:vertAlign", NS).get(qn("w:val")) == "superscript"
+    ]
     bookmarks = [
         b.get(qn("w:name")) or ""
         for b in doc.findall(".//w:bookmarkStart", NS)
@@ -351,6 +395,7 @@ def audit_docx(path: Path) -> dict[str, int | bool]:
         "bibliography_bookmarks": len(bookmarks),
         "ref_fields": sum(1 for x in instr if "REF Ref_Bib_" in x),
         "ref_fields_with_w_h": sum(1 for x in instr if "REF Ref_Bib_" in x and "\\w" in x and "\\h" in x),
+        "superscript_digit_runs": len(superscript_digit_runs),
         "hyperlink_wrappers": len(doc.findall(".//w:hyperlink", NS)),
     }
 
@@ -361,6 +406,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, help="Output DOCX. Default: <stem>_crossref.docx beside input.")
     parser.add_argument("--backup", action="store_true", help="Create <stem>.before_crossref.docx if it does not exist.")
     parser.add_argument("--heading", default="References", help="Bibliography heading text. Default: References.")
+    parser.add_argument(
+        "--no-superscript-body-citations",
+        action="store_true",
+        help="Do not superscript body citation markers. Default is to superscript them.",
+    )
     parser.add_argument("--audit", action="store_true", help="Print structural audit after writing.")
     args = parser.parse_args(argv)
 
@@ -377,7 +427,12 @@ def main(argv: list[str] | None = None) -> int:
             shutil.copy2(src, backup)
             print(f"backup={backup}")
 
-    stats = patch_docx(src, out, heading=args.heading)
+    stats = patch_docx(
+        src,
+        out,
+        heading=args.heading,
+        superscript_body_citations=not args.no_superscript_body_citations,
+    )
     print(f"wrote={out}")
     for key, value in stats.items():
         print(f"{key}={value}")

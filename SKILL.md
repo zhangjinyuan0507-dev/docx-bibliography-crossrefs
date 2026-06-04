@@ -7,7 +7,7 @@ description: Use when the user asks to modify DOCX bibliography/reference number
 
 ## Overview
 
-Convert DOCX bibliography entries written as literal `[1] ...`, `[2] ...` into real Word/WPS automatic numbering and replace body citations with clickable `REF` cross-reference fields.
+Convert DOCX bibliography entries written as literal `[1] ...`, `[2] ...` into real Word/WPS automatic numbering and replace body citations with clickable superscript bracketed `REF` cross-reference fields.
 
 Use the bundled script for the fragile OOXML work. Do not hand-build this flow from memory.
 
@@ -23,6 +23,8 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --ba
 
 Use `--out "C:\path\paper_crossref.docx"` when a specific output path is needed.
 
+Body citations are superscripted by default while preserving brackets, e.g. superscript `[1]`. Use `--no-superscript-body-citations` only when the user explicitly wants normal baseline citations.
+
 If the heading is not `References`, pass the exact heading:
 
 ```powershell
@@ -33,15 +35,18 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --he
    - `reference_paragraphs_numbered` equals the number of bibliography entries.
    - `body_ref_fields_inserted` is nonzero when body citations exist.
    - `ref_fields` equals `ref_fields_with_w_h`.
+   - `superscript_digit_runs` is nonzero unless `--no-superscript-body-citations` was used.
    - `hyperlink_wrappers=0`.
    - `numbering_relationship=True` and `numbering_content_type=True`.
 5. Open the output in WPS/Word and check:
    - References display as automatic `[1]`, `[2]`, ...
+   - Body citations display as superscript bracketed citations.
    - A body citation Ctrl+click jumps to the matching References entry.
 
 ## Important Details
 
 - The correct cross-reference field is `REF Ref_Bib_001 \w \h`.
+- The visible body citation should keep brackets as superscript text around the REF number: superscript `[` + REF number + superscript `]`.
 - `\w` is required for "paragraph number full context/full number" behavior.
 - `\h` is required for Ctrl+click jump behavior.
 - Do not wrap the REF field in `w:hyperlink`. WPS may treat that as "open specified file" and show `无法打开指定的文件`.
