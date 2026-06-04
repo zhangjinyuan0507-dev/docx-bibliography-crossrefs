@@ -1,0 +1,3 @@
+display_name: DOCX Bibliography Crossrefs
+short_description: Build clickable bibliography cross-references.
+default_prompt: 把 DOCX 参考文献编号改成可交叉引用的编号，并把正文引用改成交叉引用。
