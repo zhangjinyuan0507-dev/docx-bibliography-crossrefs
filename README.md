@@ -53,11 +53,13 @@ If the bibliography heading is not `References`, pass it explicitly:
 python scripts\bibliography_crossrefs.py "C:\path\paper.docx" --heading "参考文献" --backup --audit
 ```
 
-To keep body citations at the normal baseline instead of superscript, pass:
+Default output uses superscript body citations. To offer or generate a normal baseline version instead, pass:
 
 ```powershell
 python scripts\bibliography_crossrefs.py "C:\path\paper.docx" --no-superscript-body-citations --backup --audit
 ```
+
+This keeps the same clickable `REF` cross-reference fields and bracketed display, but removes the superscript formatting from the body citation markers.
 
 ## Expected Input
 
@@ -90,7 +92,7 @@ superscript_digit_runs=<nonzero>
 hyperlink_wrappers=0
 ```
 
-Then open the output in Word or WPS and check that body citations appear as superscript bracketed citations. Ctrl+click on a body citation should jump to the matching bibliography entry.
+Then open the output in Word or WPS and check that body citations appear as superscript bracketed citations, unless `--no-superscript-body-citations` was used. Ctrl+click on a body citation should jump to the matching bibliography entry.
 
 ## Codex Skill
 

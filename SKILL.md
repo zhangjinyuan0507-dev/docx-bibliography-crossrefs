@@ -23,7 +23,9 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --ba
 
 Use `--out "C:\path\paper_crossref.docx"` when a specific output path is needed.
 
-Body citations are superscripted by default while preserving brackets, e.g. superscript `[1]`. Use one shared bracket pair for grouped citations such as superscript `[6, 11, 12]`, not separate `[6], [11], [12]` markers. Ranged citations with hyphen, en dash, or em dash such as superscript `[37–39]` keep the visible range; each visible number is a separate `REF` field while punctuation and brackets remain superscript text. Use `--no-superscript-body-citations` only when the user explicitly wants normal baseline citations.
+Body citations are superscripted by default while preserving brackets, e.g. superscript `[1]`. Use one shared bracket pair for grouped citations such as superscript `[6, 11, 12]`, not separate `[6], [11], [12]` markers. Ranged citations with hyphen, en dash, or em dash such as superscript `[37–39]` keep the visible range; each visible number is a separate `REF` field while punctuation and brackets remain superscript text.
+
+After delivering a superscript output, mention that a normal baseline version is also available. Generate that version with `--no-superscript-body-citations` if the user asks for citations that are not superscripted.
 
 If the heading is not `References`, pass the exact heading:
 
@@ -40,7 +42,7 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --he
    - `numbering_relationship=True` and `numbering_content_type=True`.
 5. Open the output in WPS/Word and check:
    - References display as automatic `[1]`, `[2]`, ...
-   - Body citations display as superscript bracketed citations.
+   - Body citations display as superscript bracketed citations, unless `--no-superscript-body-citations` was used.
    - A body citation Ctrl+click jumps to the matching References entry.
 
 ## Important Details
