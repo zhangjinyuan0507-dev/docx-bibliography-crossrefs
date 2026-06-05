@@ -224,7 +224,7 @@ def make_ref_field(
     ]
 
 
-BODY_REF_RE = re.compile(r"\[(\d+(?:\s*[-,;]\s*\d+)*)\]")
+BODY_REF_RE = re.compile(r"\[(\d+(?:\s*[-–—,;]\s*\d+)*)\]")
 
 
 def replace_body_refs_in_paragraph(p: ET.Element, bookmarks: dict[int, str], superscript: bool) -> int:

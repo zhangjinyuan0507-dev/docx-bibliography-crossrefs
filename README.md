@@ -10,7 +10,7 @@ References
 [2] Author B. Title...
 ```
 
-The script converts the bibliography into Word/WPS automatic numbering (`[1]`, `[2]`, ...) and replaces body citations such as `[1]`, `[1, 7, 15]`, or `[62-65]` with superscript bracketed `REF` fields that use:
+The script converts the bibliography into Word/WPS automatic numbering (`[1]`, `[2]`, ...) and replaces body citations such as `[1]`, `[1, 7, 15]`, `[6, 11, 12]`, `[62-65]`, or `[37–39]` with superscript bracketed `REF` fields that use:
 
 ```text
 REF Ref_Bib_001 \w \h
@@ -25,7 +25,7 @@ That means:
 
 Plain text bibliography citations cannot update or jump to the reference list. This skill makes them behave like real cross-references while preserving the familiar bracketed citation style.
 
-By default, body citation markers are superscripted while keeping brackets, for example superscript `[1]` rather than plain `[1]` or bare `1`.
+By default, body citation markers are superscripted while keeping brackets, for example superscript `[1]` rather than plain `[1]` or bare `1`. Grouped citations keep one shared bracket pair, for example superscript `[6, 11, 12]`; each visible number is still an independent cross-reference field. Ranged citations keep the visible range, for example superscript `[37–39]`, with the visible endpoint numbers as independent cross-reference fields.
 
 ## Usage
 
@@ -70,7 +70,9 @@ python scripts\bibliography_crossrefs.py "C:\path\paper.docx" --no-superscript-b
 - Body citations should use bracketed numeric citations, for example:
   - `[1]`
   - `[1, 7, 15, 24]`
+  - `[6, 11, 12]`
   - `[62-65]`
+  - `[37–39]`
 
 If the reference list is not continuous or uses a different format, inspect manually before running.
 

@@ -23,7 +23,7 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --ba
 
 Use `--out "C:\path\paper_crossref.docx"` when a specific output path is needed.
 
-Body citations are superscripted by default while preserving brackets, e.g. superscript `[1]`. Use `--no-superscript-body-citations` only when the user explicitly wants normal baseline citations.
+Body citations are superscripted by default while preserving brackets, e.g. superscript `[1]`. Use one shared bracket pair for grouped citations such as superscript `[6, 11, 12]`, not separate `[6], [11], [12]` markers. Ranged citations with hyphen, en dash, or em dash such as superscript `[37–39]` keep the visible range; each visible number is a separate `REF` field while punctuation and brackets remain superscript text. Use `--no-superscript-body-citations` only when the user explicitly wants normal baseline citations.
 
 If the heading is not `References`, pass the exact heading:
 
@@ -46,7 +46,8 @@ python "<skill-dir>\scripts\bibliography_crossrefs.py" "C:\path\paper.docx" --he
 ## Important Details
 
 - The correct cross-reference field is `REF Ref_Bib_001 \w \h`.
-- The visible body citation should keep brackets as superscript text around the REF number: superscript `[` + REF number + superscript `]`.
+- The visible body citation should keep one shared pair of brackets as superscript text around the REF fields: superscript `[` + REF number(s) and separators + superscript `]`.
+- For `[6, 11, 12]`, create three `REF` fields inside one bracket pair. For `[37–39]`, create `REF` fields for the visible `37` and `39` and keep the dash as superscript text.
 - `\w` is required for "paragraph number full context/full number" behavior.
 - `\h` is required for Ctrl+click jump behavior.
 - Do not wrap the REF field in `w:hyperlink`. WPS may treat that as "open specified file" and show `无法打开指定的文件`.
